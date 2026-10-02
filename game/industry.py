@@ -33,6 +33,7 @@ def buy_facility(state,kind,location):
     if kind not in FACILITY_SPECS or location not in LOCATIONS: raise GameError("Instalação ou local inválido.")
     _pay(state,FACILITY_SPECS[kind].cost)
     f=Facility(state.next_id(),kind,location); state.company.facilities.append(f)
+    state.company.infrastructure_value+=f.spec.cost
     state.log(f"{f.spec.name} construída em {location}.")
     return f
 
