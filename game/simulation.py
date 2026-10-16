@@ -37,11 +37,9 @@ def finance_summary(state: GameState) -> dict[str, float]:
         * state.markets[(transport.destination, transport.product)].price
         for transport in state.transports
     )
-    facilities = sum(
-        facility.spec.cost
-        for facility in company.facilities
-        if facility.active
-    )
+    # Inactive facilities remain owned assets; shutdown affects production,
+    # not whether the company still owns the equipment.
+    facilities = sum(facility.spec.cost for facility in company.facilities)
     # infrastructure_value tracks warehouse/logistics upgrades. Facility
     # purchase costs are represented by facilities, not both fields.
     assets = inventory + cargo + facilities + company.infrastructure_value
