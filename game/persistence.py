@@ -51,6 +51,7 @@ def state_to_dict(state: GameState) -> dict[str, Any]:
             "expense_total": company.expense_total,
             "produced": {product.value: quantity for product, quantity in company.produced.items()},
             "ledger": [list(entry) for entry in company.ledger],
+            "discovered_locations": list(company.discovered_locations),
         },
         "markets": [
             {
@@ -116,6 +117,7 @@ def state_from_dict(data: dict[str, Any]) -> GameState:
             produced=produced,
             ledger=[(float(t), float(revenue), float(expense), str(category))
                     for t, revenue, expense, category in raw_company["ledger"]],
+            discovered_locations=list(raw_company.get("discovered_locations", inventory.keys())),
         )
         markets = {}
         for item in data["markets"]:
