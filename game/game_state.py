@@ -31,6 +31,8 @@ def new_game(seed=None):
     company.facilities.append(Facility(1,"mine","Marte"))
     markets={}
     for loc,products in MARKET_SEED.items():
+        if loc not in company.discovered_locations:
+            continue
         for product,(price,demand) in products.items(): markets[(loc,product)]=Market(loc,product,price,demand,demand*24,price=price,npc_supply_h=demand*.95)
     state=GameState(company,markets,rng=random.Random(seed))
     state.log("Empresa fundada. Mina de ferro operando em Marte.")
