@@ -3,6 +3,7 @@ from game.game_state import new_game
 from game.models import Product, GameError
 from game import industry, logistics, market
 from game.simulation import advance_simulation, finance_summary
+from game.persistence import dump_state, load_state
 
 
 @pytest.fixture
@@ -103,3 +104,45 @@ def test_unaffordable_upkeep_deactivates_facility(state):
     advance_simulation(state, 0.25)
     assert not state.company.facilities[0].active
     assert state.company.cash == pytest.approx(0)
+
+
+
+def test_save_load_round_trip_preserves_game_state(state):
+    state.company.cash = 4321.5
+    state.company.add("Marte", Product.IRON_ORE, 25)
+    logistics.create_transport(state, "Marte", "Terra", Product.IRON_ORE, 10)
+    advance_simulation(state, 2)
+    restored = load_state(dump_state(state))
+
+    assert restored.t == pytest.approx(state.t)
+    assert restored.company.cash == pytest.approx(state.company.cash)
+    assert restored.company.stock("Marte", Product.IRON_ORE) == pytest.approx(
+        state.company.stock("Marte", Product.IRON_ORE)
+    )
+    assert restored.company.facilities[0].kind == state.company.facilities[0].kind
+    assert restored.markets[("Marte", Product.IRON_ORE)].price == pytest.approx(
+        state.markets[("Marte", Product.IRON_ORE)].price
+    )
+    assert len(restored.transports) == len(state.transports)
+    assert list(restored.events) == list(state.events)
+    assert restored.history == state.history
+    assert restored.price_history == state.price_history
+
+
+def test_save_load_preserves_random_generator(state):
+    restored = load_state(dump_state(state))
+    assert restored.rng.random() == pytest.approx(state.rng.random())
+
+
+def test_save_load_rejects_invalid_json():
+    with pytest.raises(ValueError, match="Não foi possível ler"):
+        load_state("{not valid json")
+
+
+def test_save_load_rejects_unsupported_version(state):
+    import json
+
+    data = json.loads(dump_state(state))
+    data["version"] = 999
+    with pytest.raises(ValueError, match="Versão de save não suportada"):
+        load_state(json.dumps(data))
