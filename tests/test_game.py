@@ -1,7 +1,7 @@
 import pytest
 from game.game_state import new_game
 from game.models import Product, GameError
-from game import industry, logistics, market
+from game import exploration, industry, logistics, market
 from game.simulation import advance_simulation, finance_summary
 from game.persistence import dump_state, load_state
 
@@ -146,3 +146,41 @@ def test_save_load_rejects_unsupported_version(state):
     data["version"] = 999
     with pytest.raises(ValueError, match="Versão de save não suportada"):
         load_state(json.dumps(data))
+
+
+
+def test_exploration_unlocks_ceres_market_and_warehouse(state):
+    state.company.cash = 20000
+    before = state.company.cash
+    exploration.survey_location(state, "Ceres")
+
+    assert "Ceres" in state.company.discovered_locations
+    assert state.company.cash == pytest.approx(before - exploration.SURVEY_COSTS["Ceres"])
+    assert state.company.warehouse_capacity["Ceres"] == pytest.approx(500)
+    assert state.company.stock("Ceres", Product.IRON_ORE) == pytest.approx(0)
+    assert ("Ceres", Product.IRON_ORE) in state.markets
+    assert ("Ceres", Product.FUEL) in state.markets
+
+
+def test_exploration_rejects_insufficient_funds_without_mutation(state):
+    state.company.cash = 100
+    with pytest.raises(GameError, match="Caixa insuficiente"):
+        exploration.survey_location(state, "Ceres")
+    assert "Ceres" not in state.company.discovered_locations
+    assert "Ceres" not in state.company.inventory
+    assert not any(location == "Ceres" for location, _ in state.markets)
+
+
+def test_undiscovered_location_cannot_be_used_for_transport(state):
+    state.company.add("Marte", Product.IRON_ORE, 100)
+    with pytest.raises(GameError, match="já explorados"):
+        logistics.create_transport(state, "Marte", "Ceres", Product.IRON_ORE, 10)
+
+
+def test_save_load_preserves_discovered_locations(state):
+    state.company.cash = 20000
+    exploration.survey_location(state, "Ceres")
+    restored = load_state(dump_state(state))
+    assert "Ceres" in restored.company.discovered_locations
+    assert restored.company.warehouse_capacity["Ceres"] == pytest.approx(500)
+    assert ("Ceres", Product.IRON_ORE) in restored.markets
