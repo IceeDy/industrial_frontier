@@ -15,12 +15,12 @@ APP_ROOT = Path(__file__).resolve().parent
 if str(APP_ROOT) not in sys.path:
     sys.path.insert(0, str(APP_ROOT))
 
-from game import industry, logistics, market
+from game import exploration, industry, logistics, market
 from game.game_state import format_clock, new_game
 from game.persistence import dump_state, load_state
 from game.models import (
     FACILITY_SPECS,
-    LOCATIONS,
+    EXPANSION_LOCATIONS,
     PRODUCT_NAMES,
     GameError,
     Product,
@@ -93,7 +93,7 @@ def operations(s):
     for col, k in zip(cols, ("mine", "refinery", "factory", "fuel_plant")):
         col.metric(FACILITY_SPECS[k].name, counts[k])
     st.subheader("Construção")
-    loc = st.selectbox("Local", LOCATIONS, index=2, key="build_loc")
+    loc = st.selectbox("Local", s.company.discovered_locations, index=min(2, len(s.company.discovered_locations)-1), key="build_loc")
     for k, spec in FACILITY_SPECS.items():
         if st.button(
             f"Construir {spec.name} — {money(spec.cost)}",
@@ -131,7 +131,7 @@ def market_tab(s):
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
     st.subheader("Negociação")
     a, b, c = st.columns(3)
-    loc = a.selectbox("Local", LOCATIONS, key="trade_loc")
+    loc = a.selectbox("Local", s.company.discovered_locations, key="trade_loc")
     p = b.selectbox(
         "Produto",
         list(Product),
@@ -179,7 +179,7 @@ def inventory_tab(s):
             "Quantidade": round(s.company.stock(loc, p), 1),
             "Capacidade": round(s.company.warehouse_capacity[loc]),
         }
-        for loc in LOCATIONS
+        for loc in s.company.discovered_locations
         for p in Product
     ]
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
@@ -191,8 +191,8 @@ def logistics_tab(s):
         f"{logistics.units_in_transit(s):.0f} / {s.company.logistics_capacity:.0f}",
     )
     a, b, c, d = st.columns(4)
-    o = a.selectbox("Origem", LOCATIONS, index=2, key="lg_o")
-    dest = b.selectbox("Destino", LOCATIONS, index=0, key="lg_d")
+    o = a.selectbox("Origem", s.company.discovered_locations, index=min(2, len(s.company.discovered_locations)-1), key="lg_o")
+    dest = b.selectbox("Destino", s.company.discovered_locations, index=0, key="lg_d")
     p = c.selectbox("Carga", list(Product), format_func=fmt_product, key="lg_p")
     q = d.number_input("Quantidade", 1, 100000, 500, 50, key="lg_q")
     if st.button("Enviar carga", use_container_width=True):
@@ -234,6 +234,20 @@ def industry_tab(s):
         hide_index=True,
         use_container_width=True,
     )
+
+
+def exploration_tab(s):
+    st.subheader("Exploração do sistema")
+    st.write("Envie uma expedição para mapear um novo polo econômico. Descobrir um local abre seu mercado, armazém e rotas de transporte.")
+    for location in EXPANSION_LOCATIONS:
+        if location in s.company.discovered_locations:
+            st.success(f"{location} já explorado — mercado e entreposto desbloqueados.")
+        else:
+            cost = exploration.SURVEY_COSTS[location]
+            st.write(f"**{location}** — custo da expedição: {money(cost)}")
+            st.caption("Polo de mineração com minério barato; componentes e combustível têm preços mais altos.")
+            if st.button(f"Explorar {location} — {money(cost)}", key=f"survey_{location}", disabled=s.company.cash < cost):
+                flash_action(lambda location=location: (exploration.survey_location(s, location), f"{location} explorado. Novo mercado desbloqueado.")[1])
 
 
 def events_tab(s):
@@ -312,6 +326,7 @@ def main():
             "Logistics",
             "Industry",
             "Events",
+            "Exploration",
         ]
     )
     for tab, fn in zip(
@@ -324,6 +339,7 @@ def main():
             logistics_tab,
             industry_tab,
             events_tab,
+            exploration_tab,
         ),
     ):
         with tab:

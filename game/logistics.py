@@ -24,6 +24,8 @@ def create_transport(state, origin, destination, product, quantity):
     except ValueError as error:
         raise GameError(str(error)) from error
     company = state.company
+    if origin not in company.discovered_locations or destination not in company.discovered_locations:
+        raise GameError("A rota só pode usar locais já explorados.")
     if quantity > route.capacity:
         raise GameError(
             f"Esta rota aceita no máximo {route.capacity:.0f} unidades por transporte."
