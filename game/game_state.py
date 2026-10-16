@@ -2,11 +2,12 @@ from __future__ import annotations
 import random
 from collections import deque
 from dataclasses import dataclass,field
-from .models import Company,LOCATIONS,Product,Facility,Market,Transport
+from .models import Company,LOCATIONS,EXPANSION_LOCATIONS,Product,Facility,Market,Transport
 MARKET_SEED={
 "Terra":{Product.IRON_ORE:(12,80),Product.REFINED_IRON:(30,60),Product.INDUSTRIAL_COMPONENT:(450,8),Product.FUEL:(75,35)},
 "Lua":{Product.IRON_ORE:(9,120),Product.REFINED_IRON:(26,30),Product.INDUSTRIAL_COMPONENT:(420,4),Product.FUEL:(68,25)},
-"Marte":{Product.IRON_ORE:(8,40),Product.REFINED_IRON:(34,50),Product.INDUSTRIAL_COMPONENT:(520,12),Product.FUEL:(92,18)}}
+"Marte":{Product.IRON_ORE:(8,40),Product.REFINED_IRON:(34,50),Product.INDUSTRIAL_COMPONENT:(520,12),Product.FUEL:(92,18)},
+"Ceres":{Product.IRON_ORE:(6,100),Product.REFINED_IRON:(38,25),Product.INDUSTRIAL_COMPONENT:(600,5),Product.FUEL:(110,12)}}
 START_CAPACITY={"Terra":300.0,"Lua":300.0,"Marte":1000.0}
 @dataclass
 class GameState:
