@@ -58,7 +58,7 @@ def _pay(state, amount):
 
 
 def buy_facility(state, kind, location):
-    if kind not in FACILITY_SPECS or location not in LOCATIONS:
+    if kind not in FACILITY_SPECS or location not in state.company.discovered_locations:
         raise GameError("Instalação ou local inválido.")
     _pay(state, FACILITY_SPECS[kind].cost)
     facility = Facility(state.next_id(), kind, location)
@@ -70,7 +70,7 @@ def buy_facility(state, kind, location):
 
 
 def buy_warehouse(state, location, amount=1000):
-    if location not in LOCATIONS:
+    if location not in state.company.discovered_locations:
         raise GameError("Local inválido.")
     if amount <= 0:
         raise GameError("A expansão do armazém deve ser maior que zero.")
