@@ -17,6 +17,7 @@ if str(APP_ROOT) not in sys.path:
 
 from game import industry, logistics, market
 from game.game_state import format_clock, new_game
+from game.persistence import dump_state, load_state
 from game.models import (
     FACILITY_SPECS,
     LOCATIONS,
@@ -267,6 +268,33 @@ def main():
             if st.button(label, use_container_width=True):
                 advance_simulation(s, h)
                 st.rerun()
+        st.divider()
+        st.subheader("Save da partida")
+        st.download_button(
+            "Baixar save (.json)",
+            data=dump_state(s),
+            file_name="industrial_frontier_save.json",
+            mime="application/json",
+            use_container_width=True,
+        )
+        uploaded_save = st.file_uploader(
+            "Carregar save (.json)",
+            type=["json"],
+            key="save_upload",
+        )
+        if uploaded_save is not None and st.button(
+            "Restaurar partida do arquivo", use_container_width=True
+        ):
+            try:
+                restored = load_state(uploaded_save.getvalue())
+                st.session_state.state = restored
+                st.session_state.last_real = time.time()
+                st.session_state.pop("flash", None)
+                st.success("Save carregado com sucesso.")
+                st.rerun()
+            except ValueError as error:
+                st.error(str(error))
+
         if st.button("Novo jogo", use_container_width=True):
             st.session_state.clear()
             st.rerun()
