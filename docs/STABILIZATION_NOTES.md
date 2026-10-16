@@ -14,7 +14,7 @@ Esta branch aplica correções conservadoras à versão publicada em `main`. Ela
 ## Limitações que permanecem
 
 - O save é exportado/importado manualmente em JSON; ainda não há autosave nem simulação offline enquanto o jogo está fechado.
-- Não há mapa explorável, construção de colônias ou progressão tecnológica; isso pertence às próximas etapas do sandbox.
+- A exploração inicial agora permite desbloquear Ceres por ₡12.000, com mercado, armazém e rotas próprias. Ainda não há mapa visual, expedições com duração, colonos, perigos ou progressão tecnológica.
 - A suíte precisa ser executada no ambiente de CI antes de considerar esta branch validada.
 - A manutenção é debitada por passo de simulação; o comportamento de insolvência aqui é deliberadamente simples e pode evoluir para falência, crédito ou recuperação numa etapa posterior.
 
@@ -23,4 +23,4 @@ Esta branch aplica correções conservadoras à versão publicada em `main`. Ela
 1. Executar a suíte completa em CI.
 2. Revisar as regras econômicas e o modelo de ativos.
 3. Validar em CI os testes de ida e volta de save/load e a interface de restauração.
-4. Criar o primeiro ciclo jogável de exploração → construção → produção → logística → expansão.
+4. Evoluir exploração para expedições com duração, requisitos e riscos; depois adicionar colônias e especialização regional.
