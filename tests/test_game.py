@@ -79,8 +79,8 @@ def test_time_history(state):
 
 
 def test_facility_not_double_counted_in_company_value(state):
-    before = finance_summary(state)
     state.company.cash += 50000
+    before = finance_summary(state)
     industry.buy_facility(state, "refinery", "Marte")
     after = finance_summary(state)
     # Purchase transfers cash into an asset; the facility value is represented once.
