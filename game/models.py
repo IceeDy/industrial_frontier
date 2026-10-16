@@ -13,6 +13,8 @@ PRODUCT_NAMES = {
     Product.INDUSTRIAL_COMPONENT: "Componentes industriais", Product.FUEL: "Combustível",
 }
 LOCATIONS = ("Terra", "Lua", "Marte")
+EXPANSION_LOCATIONS = ("Ceres",)
+ALL_LOCATIONS = LOCATIONS + EXPANSION_LOCATIONS
 
 @dataclass(frozen=True)
 class Recipe:
@@ -46,10 +48,12 @@ ROUTES = {
     frozenset(("Terra", "Lua")): Route(6, 5, 1000),
     frozenset(("Terra", "Marte")): Route(24, 10, 1000),
     frozenset(("Lua", "Marte")): Route(18, 8, 1000),
+    frozenset(("Marte", "Ceres")): Route(12, 7, 500),
+    frozenset(("Lua", "Ceres")): Route(16, 9, 500),
 }
 
 def get_route(origin: str, destination: str) -> Route:
-    if origin == destination or origin not in LOCATIONS or destination not in LOCATIONS:
+    if origin == destination or origin not in ALL_LOCATIONS or destination not in ALL_LOCATIONS:
         raise ValueError("Rota inválida.")
     try: return ROUTES[frozenset((origin, destination))]
     except KeyError as exc: raise ValueError("Rota inexistente.") from exc
@@ -110,6 +114,7 @@ class Company:
     expense_total: float=0.0
     produced: dict[Product,float]=field(default_factory=lambda:{p:0.0 for p in Product})
     ledger: list[tuple[float,float,float,str]]=field(default_factory=list)
+    discovered_locations: list[str]=field(default_factory=lambda: list(LOCATIONS))
     def stock(self,location,product): return self.inventory[location][product]
     def used_space(self,location): return sum(self.inventory[location].values())
     def free_space(self,location): return self.warehouse_capacity[location]-self.used_space(location)
