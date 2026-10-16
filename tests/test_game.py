@@ -54,6 +54,8 @@ def test_transport(state):
 
 
 def test_logistics_capacity(state):
+    # Isolate logistics capacity from the destination warehouse limit.
+    state.company.warehouse_capacity["Terra"] = 5000
     state.company.add("Marte", Product.IRON_ORE, 1000)
     logistics.create_transport(state, "Marte", "Terra", Product.IRON_ORE, 1000)
     with pytest.raises(GameError):
