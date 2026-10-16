@@ -146,3 +146,12 @@ def test_save_load_rejects_unsupported_version(state):
     data["version"] = 999
     with pytest.raises(ValueError, match="Versão de save não suportada"):
         load_state(json.dumps(data))
+
+
+def test_inactive_facility_remains_an_asset(state):
+    state.company.cash += 50000
+    facility = industry.buy_facility(state, "refinery", "Marte")
+    before = finance_summary(state)["assets"]
+    facility.active = False
+    after = finance_summary(state)["assets"]
+    assert after == pytest.approx(before)
